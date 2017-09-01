@@ -3,6 +3,7 @@ import sys
 import time
 
 from checks import AgentCheck
+from utils.timeout import timeout, TimeoutException
 
 # Runs arbitrary commands, but exects that the STDOUT from the process will
 # begin with a sigil that denotes the success or failure of the check.
@@ -24,10 +25,12 @@ class NagiosRunner(AgentCheck):
 
     cmd = instance.get('command')
     name = instance.get('name')
+    default_timeout = self.init_config.get('default_timeout', 5)
+    timeout_seconds = int(instance.get('command_timeout', default_timeout))
 
     status = AgentCheck.UNKNOWN
     try:
-      output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+      output = timeout(timeout_seconds)(subprocess.check_output)(cmd, stderr=subprocess.STDOUT, shell=True)
       status = AgentCheck.OK
       self.log.debug("Got OK {0}".format(name))
     except subprocess.CalledProcessError as e:
@@ -43,6 +46,13 @@ class NagiosRunner(AgentCheck):
       else:
         status = AgentCheck.UNKNOWN
         output = e.output
+    except TimeoutException:
+      self.log.warn(
+        "Timeout while running `%s` command. Skipping...",
+        cmd
+      )
+      status = AgentCheck.UNKNOWN
+      output = "Command timeout."
 
     self.service_check(
       name,

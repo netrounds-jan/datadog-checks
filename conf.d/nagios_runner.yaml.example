@@ -1,13 +1,20 @@
 # init_config:
-# # Not required for this check
+#
+# # if you want to change default timeout
+# # uncomment line below and change the value
+# # default_timeout: 5
 #
 # instances:
 #     - name: "some.check.name1"
 #       command: "/path/to/command with args"
+#       command_timeout: 10
 #     - name: "some.check.name2"
 #       command: "/path/to/command with args2"
 
 init_config:
-  # Not required for this check
+#
+# if you want to change default timeout                             |
+# uncomment line below and change the value                         |
+# default_timeout: 5
 
 instances:
